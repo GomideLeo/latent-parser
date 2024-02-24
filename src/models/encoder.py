@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from functools import reduce
 
 class Encoder(nn.Module):
     def __init__(
@@ -10,9 +10,9 @@ class Encoder(nn.Module):
         n_channels=1,
         use_batchnorm=False,
         use_dropout=False,
-        conv_layers=[(3, 32), (3, 64), (3, 128)],
+        conv_layers=[(5, 32), (3, 64), (3, 128)],
         conv_pooling=[2, 2, 2],
-        linear_input=(128 * 14 * 14),
+        linear_input=(128, 14, 14),
         linear_layers=[256, 128],
         device=None,
     ):
@@ -41,7 +41,7 @@ class Encoder(nn.Module):
 
         # layers for latent space projection
         self.flatten = nn.Flatten()
-        self.fc_dim = linear_input
+        self.fc_dim = reduce(lambda a, b: a*b, linear_input)
         self.linear_layers = linear_layers
         self.linear = self._get_linear()
 
