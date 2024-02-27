@@ -46,5 +46,5 @@ class VAE(nn.Module):
         )
 
     def forward(self, x):
-        latent = self.encoder(x)
-        return self.decoder(latent)
+        latent, mean, var = self.encoder(x)
+        return self.decoder(latent), latent, mean, var

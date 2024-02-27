@@ -37,7 +37,7 @@ class Decoder(nn.Module):
         self.linear_layers = linear_layers
         self.linear = self._get_linear()
 
-        self.unflatten = nn.Unflatten(1, linear_output)
+        self.unflatten = nn.Unflatten(1, (self.linear_layers[-1], 1, 1))
 
         # Conv layer hypyer parameters
         self.conv_layers = conv_layers
@@ -54,7 +54,7 @@ class Decoder(nn.Module):
         hyper parameters
         """
         linear_layers = nn.Sequential()
-        for i, l in enumerate([*self.linear_layers, self.fc_dim]):
+        for i, l in enumerate(self.linear_layers):
             # The input channel of the first layer is fc_dim
             if i == 0:
                 linear_layers.append(nn.Linear(self.input_dim, l))
@@ -75,6 +75,9 @@ class Decoder(nn.Module):
         hyper parameters
         """
         conv_layers = nn.Sequential()
+
+        conv_layers.append(nn.ConvTranspose2d(self.linear_layers[-1], self.linear_output[0], kernel_size=self.linear_output[1:]))
+
         for i, (l, u) in enumerate(zip(self.conv_layers, self.conv_upsample)):
             if u is not False:
                 conv_layers.append(nn.Upsample(scale_factor=2))

@@ -40,7 +40,7 @@ class Encoder(nn.Module):
         self.conv = self._get_convs()
 
         # layers for latent space projection
-        self.flatten = nn.Flatten()
+        self.flatten = nn.Flatten(1)
         self.fc_dim = reduce(lambda a, b: a*b, linear_input)
         self.linear_layers = linear_layers
         self.linear = self._get_linear()
@@ -107,7 +107,7 @@ class Encoder(nn.Module):
         mean, var = self.distribution_mean(x), self.distribution_variance(x)
         x = self.sample_latent_features([mean, var])
 
-        return x
+        return x, mean, var
 
     def sample_latent_features(self, distribution):
         # if not self.training: return distribution[0]
