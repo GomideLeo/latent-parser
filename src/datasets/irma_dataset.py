@@ -3,14 +3,10 @@ import torch
 import pandas as pd
 from torch.utils.data import Dataset
 from skimage import io
+from sklearn.preprocessing import LabelEncoder
 
 class IrmaDataset(Dataset):
-    irma_classmap = {
-        0: 'BI-RADS A',
-        1: 'BI-RADS B',
-        2: 'BI-RADS C',
-        3: 'BI-RADS D'
-    }
+    irma_classmap = LabelEncoder().fit(['BI-RADS A', 'BI-RADS B', 'BI-RADS C', 'BI-RADS D'])
 
     def __init__(self, metadata_file='featureS.txt', root_dir='./datasets/IRMA/', transform=None):
         """
@@ -57,3 +53,11 @@ class IrmaDataset(Dataset):
                 next_path = paths.readline()
 
         return pd.DataFrame(files_metadatas, columns=['file_name', 'label'])
+
+    @classmethod
+    def get_class_label(cls, labels):
+        return cls.irma_classmap.inverse_transform(labels)
+
+    @classmethod
+    def get_class_label_value(cls, labels):
+        return cls.irma_classmap.transform(labels)

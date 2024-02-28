@@ -19,8 +19,27 @@ class VAE(nn.Module):
         linear_layers=[256, 128],
         device=None,
     ):
-
         super(VAE, self).__init__()
+
+        self.kwargs = {
+            'latent_dim': latent_dim,
+            'n_channels': n_channels,
+            'use_batchnorm': use_batchnorm,
+            'use_dropout': use_dropout,
+            'conv_layers': conv_layers,
+            'conv_pooling': conv_pooling,
+            'linear_input': linear_input,
+            'linear_layers': linear_layers,
+            'device': device,
+        }
+
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
+
+        self.latent_dim = latent_dim
+        self.n_channels = n_channels
 
         self.encoder = Encoder(
             output_dim=latent_dim,

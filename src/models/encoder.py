@@ -18,6 +18,18 @@ class Encoder(nn.Module):
     ):
         super(Encoder, self).__init__()
 
+        self.kwargs = {
+            'output_dim': output_dim,
+            'n_channels': n_channels,
+            'use_batchnorm': use_batchnorm,
+            'use_dropout': use_dropout,
+            'conv_layers': conv_layers,
+            'conv_pooling': conv_pooling,
+            'linear_input': linear_input,
+            'linear_layers': linear_layers,
+            'device': device,
+        }
+
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:

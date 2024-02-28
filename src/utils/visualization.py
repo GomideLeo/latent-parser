@@ -2,7 +2,7 @@ import torch, torchvision
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-def sample_images(data_source, n=9, figsize=(5, 5)):
+def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l):
     """Shows a grid of n images from a PyTorch dataset with labels as titles.
 
     Args:
@@ -32,6 +32,8 @@ def sample_images(data_source, n=9, figsize=(5, 5)):
 
     grid_img = torchvision.utils.make_grid(images, nrow=3)
     fig, axes = plt.subplots(3, 3, figsize=figsize)  # Create subplots for individual images
+
+    labels = label_mapper(labels)
 
     for i in range(n):
         if images[i].shape[-1] == 1:  # Grayscale image

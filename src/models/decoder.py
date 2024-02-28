@@ -19,6 +19,18 @@ class Decoder(nn.Module):
     ):
         super(Decoder, self).__init__()
 
+        self.kwargs = {
+            'input_dim': input_dim,
+            'use_batchnorm': use_batchnorm,
+            'use_dropout': use_dropout,
+            'n_channels': n_channels,
+            'conv_layers': conv_layers,
+            'conv_upsample': conv_upsample,
+            'linear_output': linear_output,
+            'linear_layers': linear_layers,
+            'device': device,
+        }
+
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:

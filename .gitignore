@@ -1,5 +1,6 @@
 # datasets
 /datasets/
+/models/
 *.zip
 *.tar.gz
 *.tar
