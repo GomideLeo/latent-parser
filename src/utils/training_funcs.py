@@ -1,11 +1,13 @@
 import torch
+import torch.nn as nn
+import torch.functional as F
 from ..losses.kl_loss import get_kl_loss
 from ..losses.reconstruction_loss import get_reconstruction_loss
 
 def get_metrics_str(metrics, prefix=""):
     return " ".join([f"{prefix}{l[0]}: {l[1]:.4f}" for l in metrics.items()])
 
-def kl_reconstruction_loss(input, model_out):
+def kl_reconstruction_loss(input, model_out, y_true):
     out, latent, mean, var = model_out
 
     kl_loss = get_kl_loss(mean, var)
@@ -15,9 +17,22 @@ def kl_reconstruction_loss(input, model_out):
 
     return loss, dict(rec_loss=rec_loss, kl_loss=kl_loss)
 
+def pred_kl_reconstruction_loss(input, model_out, y_true, criterion=nn.CrossEntropyLoss(reduction='sum')):
+    out, pred, latent, mean, var = model_out
+
+    kl_loss = get_kl_loss(mean, var)
+    rec_loss = get_reconstruction_loss(input, out)
+    pred_loss = criterion(pred, y_true)
+
+    _, predicted = torch.max(pred, 1)
+    accuracy = (predicted == y_true).sum()
+
+    loss = kl_loss + rec_loss + pred_loss
+
+    return loss, dict(rec_loss=rec_loss, kl_loss=kl_loss, pred_loss=pred_loss, accuracy=accuracy)
+
 def validate(model, data, loss_func=None, device='cuda'):
     running_metrics = {'loss': 0.0}
-
 
     with torch.no_grad():
         data_len = 0
@@ -25,11 +40,11 @@ def validate(model, data, loss_func=None, device='cuda'):
             # get the inputs; data is a list of [inputs, labels]
             inputs = data[0].to(device)
             data_len += len(data[0])
-            # labels = data[1].to(device)
+            labels = data[1].to(device)
 
             outputs = model(inputs)
 
-            loss, metrics = loss_func(inputs, outputs)
+            loss, metrics = loss_func(inputs, outputs, labels)
 
             running_metrics['loss'] += loss.item()
 
@@ -50,13 +65,13 @@ def train(model, optimizer, train_data, val_data, epochs, loss_func, device='cud
         for i, data in enumerate(train_data, 0):
             inputs = data[0].to(device)
             train_len += len(data[0])
-            # labels = data[1].to(device)
+            labels = data[1].to(device)
 
             optimizer.zero_grad()
 
             outputs = model(inputs)
 
-            loss, metrics = loss_func(inputs, outputs)
+            loss, metrics = loss_func(inputs, outputs, labels)
 
             loss.backward()
 
