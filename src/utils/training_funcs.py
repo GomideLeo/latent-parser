@@ -5,7 +5,7 @@ from ..losses.kl_loss import get_kl_loss
 from ..losses.reconstruction_loss import get_reconstruction_loss
 
 def get_metrics_str(metrics, prefix=""):
-    return " ".join([f"{prefix}{l[0]}: {l[1]:.4f}" for l in metrics.items()])
+    return " - ".join([f"{prefix}{l[0]}: {l[1]:.4f}" for l in metrics.items()])
 
 def kl_reconstruction_loss(input, model_out, y_true):
     out, latent, mean, var = model_out

@@ -16,6 +16,7 @@ class VAE(nn.Module):
         conv_pooling=[2, 2, 2],
         linear_input=(128, 14, 14),
         linear_layers=[256, 128],
+        clamp_output=(0, 1),
         device=None,
     ):
         super(VAE, self).__init__()
@@ -29,6 +30,7 @@ class VAE(nn.Module):
             'conv_pooling': conv_pooling,
             'linear_input': linear_input,
             'linear_layers': linear_layers,
+            'clamp_output': clamp_output,
             'device': device,
         }
 
@@ -60,6 +62,7 @@ class VAE(nn.Module):
             conv_upsample=conv_pooling[::-1],
             linear_output=linear_input,
             linear_layers=linear_layers[::-1],
+            clamp_output=clamp_output,
             device=device,
         )
 

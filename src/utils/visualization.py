@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
 
-def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l):
+def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l, plot_borders=False):
     """Shows a grid of n images from a PyTorch dataset with labels as titles.
 
     Args:
@@ -38,10 +38,19 @@ def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l):
     labels = label_mapper(labels)
 
     for i in range(n):
-        if images[i].shape[-1] == 1:  # Grayscale image
-            axes[i // 3, i % 3].imshow(images[i], cmap='gray')  # Apply cmap
+        if plot_borders:
+            image = images[i, :, :, :-1]
+            border = images[i, :, :, -1]
         else:
-            axes[i // 3, i % 3].imshow(images[i])  # Color image
+            image = images[i]
+        if image.shape[-1] == 1:  # Grayscale image
+            if plot_borders:
+                combined_image = np.concatenate((image.flatten(1), border), axis=1)
+                axes[i // 3, i % 3].imshow(combined_image, cmap='gray')  # Apply cmap
+            else:
+                axes[i // 3, i % 3].imshow(image, cmap='gray')  # Apply cmap
+        else:
+            axes[i // 3, i % 3].imshow(image)  # Color image
 
         axes[i // 3, i % 3].axis('off')
         axes[i // 3, i % 3].set_title(str(labels[i].item()))  # Set label as title for each image
@@ -50,13 +59,15 @@ def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l):
     plt.tight_layout()
     plt.show()
 
-def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None):
+def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None, plot_borders=False):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = device
 
     fig, axs = plt.subplots(2, n)
+    if plot_borders:
+        fig.set_figwidth(16)
 
     with torch.no_grad():
         for i, data in enumerate(data, 0):
@@ -69,9 +80,18 @@ def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None):
                     reconstructed = inv_normalize(reconstructed)      # unnormalize
                     original = inv_normalize(original)                # unnormalize
 
-                axs[0][ax].imshow(reconstructed[0].cpu(), cmap='gray')
+                # reco = reconstructed[0].cpu()
+                if plot_borders:
+                    fig.set_figwidth(16)
+                    reconstructed_fig = np.concatenate((reconstructed[0].cpu(), reconstructed[1].cpu()), axis=1)
+                    original_fig = np.concatenate((original[0].cpu(), original[1].cpu()), axis=1)
+                else:
+                    fig.set_figwidth(8)
+                    reconstructed_fig = reconstructed[0].cpu()
+                    original_fig = original[0].cpu()
+                axs[0][ax].imshow(reconstructed_fig, cmap='gray')
                 # axs[0][ax].imshow(reconstructed.cpu().permute(1,2,0))
-                axs[1][ax].imshow(original[0].cpu(), cmap='gray')
+                axs[1][ax].imshow(original_fig, cmap='gray')
                 # axs[1][ax].imshow(original.cpu().permute(1,2,0))
                 axs[0][ax].axis('off')
                 axs[1][ax].axis('off')
@@ -79,10 +99,10 @@ def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None):
 
             break
 
-def plot_2d(pos, labels, dataset, cmap='tab10'):
+def plot_2d(pos, labels, cmap='tab10', label_mapper=lambda l: l):
     cmap = plt.colormaps[cmap]
     plt.figure(figsize=(8, 6))
-    for c, cl in zip(np.unique(labels), pd.Series(dataset.get_class_label_value(np.unique(labels))).map(cmap)):
+    for c, cl in zip(np.unique(labels), pd.Series(label_mapper(np.unique(labels))).map(cmap)):
         idxs = np.argwhere(labels == c)
         plt.scatter(
             pos[idxs, 0],

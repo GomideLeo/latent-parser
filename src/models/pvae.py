@@ -17,6 +17,7 @@ class PVAE(nn.Module):
         linear_layers=[256, 128],
         n_classes=2,
         pred_layers=[],
+        clamp_output=(0, 1),
         device=None,
     ):
         super(PVAE, self).__init__()
@@ -67,6 +68,7 @@ class PVAE(nn.Module):
             conv_upsample=conv_pooling[::-1],
             linear_output=linear_input,
             linear_layers=linear_layers[::-1],
+            clamp_output=clamp_output,
             device=device,
         )
 

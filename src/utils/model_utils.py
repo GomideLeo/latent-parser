@@ -11,7 +11,7 @@ def train_val_split(dataset, val_split=0.25):
     return datasets
 
 
-def get_latent(model, data, device=None, label_mapper=lambda l: l):
+def get_latent(model, data, label_mapper=lambda l: l, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:

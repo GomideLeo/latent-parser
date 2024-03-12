@@ -15,6 +15,7 @@ class Decoder(nn.Module):
         conv_upsample=[2, 2, 2],
         linear_output=(128, 14, 14),
         linear_layers=[128, 256],
+        clamp_output=(0,1),
         device=None,
     ):
         super(Decoder, self).__init__()
@@ -28,6 +29,7 @@ class Decoder(nn.Module):
             'conv_upsample': conv_upsample,
             'linear_output': linear_output,
             'linear_layers': linear_layers,
+            'clamp_output': clamp_output,
             'device': device,
         }
 
@@ -58,7 +60,10 @@ class Decoder(nn.Module):
             raise Exception("conv_layers and conv_upsample should have the same length")
         self.conv = self._get_convs()
 
-        self.output = nn.Conv2d(self.conv_layers[-1][1], self.n_channels, kernel_size=1, stride=1)
+        self.output = nn.Sequential()
+        self.output.append(nn.Conv2d(self.conv_layers[-1][1], self.n_channels, kernel_size=1, stride=1))
+        if clamp_output is not None and clamp_output is not False:
+            self.output.append(nn.Hardtanh(*clamp_output)) # clamp output between 0 and 1
 
     def _get_linear(self):
         """
