@@ -31,16 +31,28 @@ def pred_kl_reconstruction_loss(input, model_out, y_true, criterion=nn.CrossEntr
 
     return loss, dict(rec_loss=rec_loss, kl_loss=kl_loss, pred_loss=pred_loss, accuracy=accuracy)
 
+def pred_loss(input, model_out, y_true, criterion=nn.CrossEntropyLoss(reduction='sum')):
+    pred = model_out
+
+    predict_loss = criterion(pred, y_true)
+
+    _, predicted = torch.max(pred, 1)
+    accuracy = (predicted == y_true).sum()
+
+    loss = predict_loss
+
+    return loss, dict(predict_loss=predict_loss, accuracy=accuracy)
+
 def validate(model, data, loss_func=None, device='cuda'):
     running_metrics = {'loss': 0.0}
 
     with torch.no_grad():
         data_len = 0
-        for i, data in enumerate(data, 0):
+        for i, (d, l) in enumerate(data, 0):
             # get the inputs; data is a list of [inputs, labels]
-            inputs = data[0].to(device)
-            data_len += len(data[0])
-            labels = data[1].to(device)
+            inputs = d.to(device)
+            data_len += len(d)
+            labels = l.to(device)
 
             outputs = model(inputs)
 
