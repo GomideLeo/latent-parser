@@ -16,10 +16,18 @@ class MinMaxScaler(object):
     def __call__(self, sample):
         image = sample
 
-        min = torch.min(image)
-        max = torch.max(image)
+        if len(image.shape) == 3:
+            for (i, dim) in enumerate(image):
+                min_value = torch.min(dim)
+                max_value = torch.max(dim)
 
-        img = (image - min) / (max - min)
-        img = img * (self.max - self.min) + self.min
+                image[i] = (dim - min_value) / (max_value - min_value)
+                image[i] = dim * (self.max - self.min) + self.min
+        else:
+            min_value = torch.min(image)
+            max_value = torch.max(image)
 
-        return img
+            image = (image - min_value) / (max_value - min_value)
+            image = image * (self.max - self.min) + self.min
+
+        return image

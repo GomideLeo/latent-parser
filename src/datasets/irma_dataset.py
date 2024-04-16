@@ -6,9 +6,9 @@ from skimage import io
 from sklearn.preprocessing import LabelEncoder
 
 class IrmaDataset(Dataset):
-    irma_classmap = LabelEncoder().fit(['BI-RADS A', 'BI-RADS B', 'BI-RADS C', 'BI-RADS D'])
+    irma_classmap = LabelEncoder().fit(['BI-RADS I', 'BI-RADS II', 'BI-RADS III', 'BI-RADS IV'])
 
-    def __init__(self, metadata_file='featureS.txt', root_dir='./datasets/IRMA/', transform=None):
+    def __init__(self, metadata_file='featureS.txt', root_dir='./datasets/IRMA/', transform=None, return_images=False):
         """
         Arguments:
             csv_file (string): Path to the metadata file.
@@ -16,9 +16,10 @@ class IrmaDataset(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.metadata_frame = self._read_metadata(root_dir, metadata_file)
+        self.return_images = return_images
         self.root_dir = root_dir
         self.transform = transform
+        self.metadata_frame = self._read_metadata(root_dir, metadata_file)
 
     def __len__(self):
         return len(self.metadata_frame)
@@ -27,14 +28,18 @@ class IrmaDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        img_name = os.path.join(self.root_dir,
-                                self.metadata_frame.iloc[idx, 0] + '.png')
-        image = io.imread(img_name)
-        label = int(self.metadata_frame.iloc[idx, 1])
-        # label = np.array(label, dtype=float)
+        label = self.metadata_frame.iloc[idx, 1]
 
-        if self.transform:
-            image = self.transform(image)
+        if self.return_images:
+            image = self.metadata_frame.iloc[idx, 0]
+        else:
+            img_name = os.path.join(self.root_dir,
+                                    self.metadata_frame.iloc[idx, 0] + '.png')
+            image = io.imread(img_name)
+            # label = np.array(label, dtype=float)
+
+            if self.transform:
+                image = self.transform(image)
 
         return image, label
 
@@ -47,12 +52,22 @@ class IrmaDataset(Dataset):
 
             while next_path:
                 label = paths.readline()
-                next_path, label = next_path[:-1], label[:-1] # remove '\n'
-                files_metadatas.append((next_path, label))
+                next_path, label = next_path[:-1], int(label[:-1]) # remove '\n'
+
+                if self.return_images:
+                    img_name = os.path.join(self.root_dir, next_path + '.png')
+                    image = io.imread(img_name)
+
+                    if self.transform:
+                        image = self.transform(image)
+                    
+                    files_metadatas.append((image, label))
+                else:
+                    files_metadatas.append((next_path, label))
 
                 next_path = paths.readline()
 
-        return pd.DataFrame(files_metadatas, columns=['file_name', 'label'])
+        return pd.DataFrame(files_metadatas, columns=['file_name' if self.return_images else 'image', 'label'])
 
     @classmethod
     def get_class_label(cls, labels):

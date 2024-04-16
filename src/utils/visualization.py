@@ -55,7 +55,7 @@ def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l, pl
         axes[i // 3, i % 3].axis('off')
         axes[i // 3, i % 3].set_title(str(labels[i].item()))  # Set label as title for each image
 
-    fig.suptitle(f"Grid of {n} Images with Labels", fontsize=16)  # Add overall title
+    # fig.suptitle(f"Grid of {n} Images with Labels", fontsize=16)  # Add overall title
     plt.tight_layout()
     plt.show()
 
