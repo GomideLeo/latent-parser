@@ -22,7 +22,7 @@ class MinMaxScaler(object):
                 max_value = torch.max(dim)
 
                 image[i] = (dim - min_value) / (max_value - min_value)
-                image[i] = dim * (self.max - self.min) + self.min
+                image[i] = image[i] * (self.max - self.min) + self.min
         else:
             min_value = torch.min(image)
             max_value = torch.max(image)
