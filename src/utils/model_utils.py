@@ -4,9 +4,9 @@ import numpy as np
 import torch
 
 
-def train_val_split(dataset, val_split=0.25):
+def train_val_split(dataset, val_split=0.25, random_state=None):
     train_idx, val_idx = train_test_split(
-        list(range(len(dataset))), test_size=val_split
+        list(range(len(dataset))), test_size=val_split, random_state=random_state
     )
     datasets = {}
     datasets['train'] = Subset(dataset, train_idx)
@@ -32,7 +32,7 @@ def get_latent(model, data, label_mapper=lambda l: l, device=None):
             labels = data[1]
 
             outputs = model.encoder(inputs)
-            latent = outputs[0]
+            latent = outputs[0] if type(outputs) == tuple else outputs
 
             latent_features = (
                 np.concatenate((latent_features[0], latent.cpu().detach().numpy())),

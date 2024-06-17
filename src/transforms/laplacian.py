@@ -3,9 +3,11 @@ import torch.nn.functional as F
 
 class Laplacian(object):
 
-    def __init__(self, inplace=False, kernel='negative'):
+    def __init__(self, mode=None, kernel='negative', clamp=False):
         super(Laplacian, self)
-        self.inplace = inplace
+        self.inplace = True if mode == 'inplace' else False
+        self.add = True if mode == 'add' else False
+        self.clamp = clamp
         if type(kernel) == torch.Tensor:
             self.kernel = kernel
         elif kernel == 'negative':
@@ -24,4 +26,15 @@ class Laplacian(object):
 
         conv = F.conv2d(image, self.kernel, padding='same')
 
-        return conv if self.inplace else torch.cat((image, conv))
+        if self.add: 
+            image = image + conv
+
+            if self.clamp != False and type(self.clamp) == tuple:
+                image = torch.clamp(image, self.clamp[0], self.clamp[1])
+
+            return image
+        else:
+            if self.clamp != False and type(self.clamp) == tuple:
+                conv = torch.clamp(conv, self.clamp[0], self.clamp[1])
+
+            return conv if self.inplace else torch.cat((image, conv))

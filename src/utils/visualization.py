@@ -59,7 +59,7 @@ def sample_images(data_source, n=9, figsize=(5, 5), label_mapper=lambda l: l, pl
     plt.tight_layout()
     plt.show()
 
-def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None, plot_borders=False):
+def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None, plot_borders=False, label_mapper=lambda l: l):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
@@ -75,7 +75,9 @@ def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None, plot
 
             outputs = model(inputs)
 
-            for ax, reconstructed, original in zip(range(n), outputs[0], inputs):
+            label_mapper(labels)
+
+            for ax, reconstructed, original, label in zip(range(n), outputs[0], inputs, labels):
                 if inv_normalize is not None:
                     reconstructed = inv_normalize(reconstructed)      # unnormalize
                     original = inv_normalize(original)                # unnormalize
@@ -95,6 +97,8 @@ def plot_reconstructions(model, data, inv_normalize=None, n=4, device=None, plot
                 # axs[1][ax].imshow(original.cpu().permute(1,2,0))
                 axs[0][ax].axis('off')
                 axs[1][ax].axis('off')
+
+                axs[0][ax].set_title(str(labels[i].item()))
             plt.show()
 
             break

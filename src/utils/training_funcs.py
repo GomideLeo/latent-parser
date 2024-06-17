@@ -31,6 +31,28 @@ def pred_kl_reconstruction_loss(input, model_out, y_true, criterion=nn.CrossEntr
 
     return loss, dict(rec_loss=rec_loss, kl_loss=kl_loss, pred_loss=pred_loss, accuracy=accuracy)
 
+def reconstruction_loss(input, model_out, y_true):
+    out, latent = model_out
+
+    rec_loss = get_reconstruction_loss(input, out)
+
+    loss = rec_loss
+
+    return loss, dict(rec_loss=rec_loss)
+
+def pred_reconstruction_loss(input, model_out, y_true, criterion=nn.CrossEntropyLoss(reduction='sum')):
+    out, pred, latent = model_out
+
+    rec_loss = get_reconstruction_loss(input, out)
+    pred_loss = criterion(pred, y_true)
+
+    _, predicted = torch.max(pred, 1)
+    accuracy = (predicted == y_true).sum()
+
+    loss = rec_loss + pred_loss
+
+    return loss, dict(rec_loss=rec_loss, pred_loss=pred_loss, accuracy=accuracy)
+
 def pred_loss(input, model_out, y_true, criterion=nn.CrossEntropyLoss(reduction='sum')):
     pred = model_out
 

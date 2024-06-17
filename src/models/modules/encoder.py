@@ -14,6 +14,7 @@ class Encoder(nn.Module):
         conv_pooling=[2, 2, 2],
         linear_input=(128, 14, 14),
         linear_layers=[256, 128],
+        variational=True,
         device=None,
     ):
         super(Encoder, self).__init__()
@@ -57,8 +58,18 @@ class Encoder(nn.Module):
         self.linear_layers = linear_layers
         self.linear = self._get_linear()
 
-        self.distribution_mean = nn.Linear(self.linear_layers[-1], output_dim)
-        self.distribution_variance = nn.Linear(self.linear_layers[-1], output_dim)
+        self.variational = variational
+
+        if variational:
+            self.distribution_mean = nn.Linear(self.linear_layers[-1], output_dim)
+            self.distribution_variance = nn.Linear(self.linear_layers[-1], output_dim)
+        else:
+            self.linear.append(nn.Linear(self.linear_layers[-1], output_dim))
+            self.linear.append(nn.GELU())
+
+            if self.use_dropout:
+                self.linear.append(nn.Dropout(0.15))
+
     
     def _get_linear(self):
         """
@@ -98,7 +109,7 @@ class Encoder(nn.Module):
                 )
 
             if self.use_batchnorm:
-                conv_layers.append(nn.BatchNorm2d(self.channels[i]))
+                conv_layers.append(nn.BatchNorm2d(l[1]))
 
             # Here we use GELU as activation function
             conv_layers.append(nn.GELU())
@@ -116,10 +127,12 @@ class Encoder(nn.Module):
         x = self.flatten(x)
         x = self.linear(x)
 
-        mean, var = self.distribution_mean(x), self.distribution_variance(x)
-        x = self.sample_latent_features([mean, var])
+        if self.variational:
+            mean, var = self.distribution_mean(x), self.distribution_variance(x)
+            x = self.sample_latent_features([mean, var])
+            return x, mean, var
 
-        return x, mean, var
+        return x
 
     def sample_latent_features(self, distribution):
         # if not self.training: return distribution[0]

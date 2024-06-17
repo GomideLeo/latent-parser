@@ -52,6 +52,7 @@ class VAE(nn.Module):
             linear_input=linear_input,
             linear_layers=linear_layers,
             device=device,
+            variational=True
         )
         self.decoder = Decoder(
             input_dim=latent_dim,

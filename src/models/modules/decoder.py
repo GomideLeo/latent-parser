@@ -108,7 +108,7 @@ class Decoder(nn.Module):
                 )
 
             if self.use_batchnorm:
-                conv_layers.append(nn.BatchNorm2d(self.channels[i]))
+                conv_layers.append(nn.BatchNorm2d(l[1]))
 
             # Here we use GELU as activation function
             conv_layers.append(nn.GELU())
