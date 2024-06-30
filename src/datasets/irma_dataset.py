@@ -8,7 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 class IrmaDataset(Dataset):
     irma_classmap = LabelEncoder().fit(['BI-RADS I', 'BI-RADS II', 'BI-RADS III', 'BI-RADS IV'])
 
-    def __init__(self, metadata_file='featureS.txt', root_dir='./datasets/IRMA/', transform=None, return_images=False):
+    def __init__(self, metadata_file='featureS.txt', root_dir='./datasets/IRMA/', transform=None, return_images=False, return_path=False):
         """
         Arguments:
             csv_file (string): Path to the metadata file.
@@ -20,6 +20,7 @@ class IrmaDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
         self.metadata_frame = self._read_metadata(root_dir, metadata_file)
+        self.return_path = return_path
 
     def __len__(self):
         return len(self.metadata_frame)
@@ -28,20 +29,24 @@ class IrmaDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        label = self.metadata_frame.iloc[idx, 1]
+        label = self.metadata_frame.iloc[idx, -1]
+        path = self.metadata_frame.iloc[idx, 0]
 
         if self.return_images:
-            image = self.metadata_frame.iloc[idx, 0]
+            image = self.metadata_frame.iloc[idx, 1]
         else:
             img_name = os.path.join(self.root_dir,
-                                    self.metadata_frame.iloc[idx, 0] + '.png')
+                                    path + '.png')
             image = io.imread(img_name)
             # label = np.array(label, dtype=float)
 
             if self.transform:
                 image = self.transform(image)
 
-        return image, label
+        if self.return_path:
+            return image, label, path
+        else:
+            return image, label
 
 
     def _read_metadata(self, root_dir, metadata_file):
@@ -61,13 +66,13 @@ class IrmaDataset(Dataset):
                     if self.transform:
                         image = self.transform(image)
                     
-                    files_metadatas.append((image, label))
+                    files_metadatas.append((next_path, image, label))
                 else:
                     files_metadatas.append((next_path, label))
 
                 next_path = paths.readline()
 
-        return pd.DataFrame(files_metadatas, columns=['file_name' if self.return_images else 'image', 'label'])
+        return pd.DataFrame(files_metadatas, columns=['file_name', 'image', 'label'] if self.return_images else ['file_name', 'label'])
 
     @classmethod
     def get_class_label(cls, labels):

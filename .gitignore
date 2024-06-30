@@ -1,6 +1,9 @@
 # datasets
 /datasets/
 /models/
+/results/
+/exported_imgs/
+/descriptors/
 *.zip
 *.tar.gz
 *.tar

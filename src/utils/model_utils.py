@@ -14,7 +14,7 @@ def train_val_split(dataset, val_split=0.25, random_state=None):
     return datasets
 
 
-def get_latent(model, data, label_mapper=lambda l: l, device=None):
+def get_latent(model, data, label_mapper=lambda l: l, device=None, include_paths=False):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
@@ -22,6 +22,7 @@ def get_latent(model, data, label_mapper=lambda l: l, device=None):
 
     model.to(device)
     latent_features = (np.ndarray((0, model.latent_dim)), np.ndarray(0))
+    paths = []
 
     with torch.no_grad():
         data_len = 0
@@ -30,9 +31,13 @@ def get_latent(model, data, label_mapper=lambda l: l, device=None):
             inputs = data[0].to(device)
             data_len += len(data[0])
             labels = data[1]
+            if include_paths:
+                ps = data[2]
+                paths.extend(ps)
 
             outputs = model.encoder(inputs)
             latent = outputs[0] if type(outputs) == tuple else outputs
+
 
             latent_features = (
                 np.concatenate((latent_features[0], latent.cpu().detach().numpy())),
@@ -41,7 +46,7 @@ def get_latent(model, data, label_mapper=lambda l: l, device=None):
                 ),
             )
 
-    return latent_features
+    return (paths, *latent_features) if include_paths else latent_features
 
 def predict(model, data, return_class=False, device=None):
     if device is None:
